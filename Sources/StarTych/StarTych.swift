@@ -90,9 +90,9 @@ public class StarTych: Codable {
         return newTych
     }
     
-    // TODO: Probably make non-optional
-    func makeStarTych() -> CGImage? {
-        return nil
+    // TODO: Probably make non-optional, actually implement
+    public func makeStarTych() -> CGImage? {
+        return images.first
     }
     
     public func addImage(_ image: CGImage) {
