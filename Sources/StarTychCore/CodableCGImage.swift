@@ -5,7 +5,9 @@
 //  Created by Jonathan Lynch on 1/23/20.
 //
 
-import CoreImage
+import CoreGraphics
+import Foundation
+import ImageIO
 
 struct CodableCGImage: Codable {
     let image: CGImage
