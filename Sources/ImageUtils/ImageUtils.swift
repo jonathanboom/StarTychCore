@@ -8,6 +8,7 @@
 import CoreGraphics
 import Foundation
 import ImageIO
+import ObjectiveCHelpers
 
 public class ImageUtils {
     
@@ -30,30 +31,12 @@ public class ImageUtils {
     }
     
     public static func averageColorComponents(for image: CGImage) -> [CGFloat] {
-        // Make the raw space to draw 1 pixel, 4 bytes
-        let rawData = UnsafeMutableRawPointer.allocate(byteCount: 4, alignment: 1)
-        
-        // Draw the image as a 1x1 pixel into a canvas (in 32-bit, big endian format)
-        let bitmapInfo = alphaPremultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
-        let canvas = CGContext(data: rawData, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: bitmapInfo)
-        canvas?.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
-        
-        // Load the color components as Floats, then divide by maximum color value to build the component array
-        let rawDataChars = rawData.load(as: [CGFloat].self)
-        let comps: [CGFloat] = [
-            rawDataChars[0] / 0xff,
-            rawDataChars[1] / 0xff,
-            rawDataChars[2] / 0xff,
-            1.0 // Alpha channel
-        ]
-        
-        rawData.deallocate()
-        return comps
+        return AverageColorUtil.averageColorComponents(for: image).map { CGFloat($0.floatValue) }
     }
     
     public static func averageColor(image: CGImage) -> CGColor? {
-        let comps: [CGFloat] = averageColorComponents(for: image)
-        return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: comps)
+        let components: [CGFloat] = averageColorComponents(for: image)
+        return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: components)
     }
     
     public static func createImage(from source: CGImageSource, maxSize: Int) -> CGImage? {

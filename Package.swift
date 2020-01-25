@@ -16,10 +16,13 @@ let package = Package(
     targets: [
         .target(
             name: "ImageUtils",
-            dependencies: []),
+            dependencies: ["ObjectiveCHelpers"]),
         .target(
             name: "ImageFileManager",
             dependencies: ["ImageUtils"]),
+        .target(
+            name: "ObjectiveCHelpers",
+            dependencies: []),
         .target(
             name: "StarTych",
             dependencies: ["ImageUtils"]),
