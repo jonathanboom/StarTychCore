@@ -34,7 +34,8 @@ public class ImageUtils {
         let rawData = UnsafeMutableRawPointer.allocate(byteCount: 4, alignment: 1)
         
         // Draw the image as a 1x1 pixel into a canvas (in 32-bit, big endian format)
-        let canvas = CGContext(data: rawData, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: alphaPremultipliedLast.rawValue)
+        let bitmapInfo = alphaPremultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue
+        let canvas = CGContext(data: rawData, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: bitmapInfo)
         canvas?.draw(image, in: CGRect(x: 0, y: 0, width: 1, height: 1))
         
         // Load the color components as Floats, then divide by maximum color value to build the component array
