@@ -56,7 +56,7 @@ public class ImageUtils {
     }
     
     public static func createImage(from source: CGImageSource, maxSize: Int) -> CGImage? {
-        let metadata: NSDictionary? = CGImageSourceCopyProperties(source, nil)
+        let metadata: NSDictionary? = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
         let orientation = metadata?[kCGImagePropertyOrientation] as? Int ?? 0
         
         guard let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
