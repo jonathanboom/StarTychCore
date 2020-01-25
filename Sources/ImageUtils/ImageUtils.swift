@@ -56,9 +56,6 @@ public class ImageUtils {
     }
     
     public static func createImage(from source: CGImageSource, maxSize: Int) -> CGImage? {
-        let metadata: NSDictionary? = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
-        let orientation = metadata?[kCGImagePropertyOrientation] as? CGImagePropertyOrientation ?? .up
-        
         guard let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
             return nil
         }
@@ -74,6 +71,7 @@ public class ImageUtils {
             height = height * scaleFactor
         }
         
+        let orientation = getOrientation(of: source)
         if orientation != .up {
             needsProcessing = true
         }
@@ -105,6 +103,18 @@ public class ImageUtils {
         
         canvas.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         return canvas.makeImage()
+    }
+    
+    private static func getOrientation(of source: CGImageSource) -> CGImagePropertyOrientation {
+        let metadata: NSDictionary? = CGImageSourceCopyPropertiesAtIndex(source, 0, nil)
+        if let orientationRaw = metadata?[kCGImagePropertyOrientation] as? UInt32,
+            let orientation = CGImagePropertyOrientation(rawValue: orientationRaw) {
+            return orientation
+        }
+        
+        // If we cannot determine the orientation we use .up, which is the identity value and means that the image is
+        // "right side up"
+        return .up
     }
     
     private static func transformationToCorrectOrientation(for orientation: CGImagePropertyOrientation, width: CGFloat, height: CGFloat) -> CGAffineTransform? {
