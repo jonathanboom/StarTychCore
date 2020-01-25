@@ -10,7 +10,7 @@ let package = Package(
     products: [
         .library(
             name: "StarTychCore",
-            targets: ["ImageFileManager", "ImageUtils", "StarTych"]),
+            targets: ["ImageFileManager", "ImageUtils", "StarTychCore"]),
     ],
     dependencies: [],
     targets: [
@@ -24,10 +24,10 @@ let package = Package(
             name: "ObjectiveCHelpers",
             dependencies: []),
         .target(
-            name: "StarTych",
+            name: "StarTychCore",
             dependencies: ["ImageUtils"]),
         .testTarget(
             name: "StarTychCoreTests",
-            dependencies: ["StarTych"]),
+            dependencies: ["StarTychCore"]),
     ]
 )
