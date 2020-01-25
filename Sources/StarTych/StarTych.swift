@@ -6,8 +6,9 @@
 //
 
 import CoreGraphics
+import ImageUtils
 
-class StarTych: Codable {
+public class StarTych: Codable {
     var isOrientationSwapped = false
     var outerBorderWeight: Float
     var innerBorderWeight: Float
@@ -18,7 +19,7 @@ class StarTych: Codable {
     private var averageColorCache: CGColor?
     
     // This should really be synchronized to prevent concurrency issues
-    var averageColor: CGColor? {
+    public var averageColor: CGColor? {
         if let cachedAverage = averageColorCache {
             return cachedAverage
         }
@@ -54,7 +55,7 @@ class StarTych: Codable {
         case images
     }
     
-    func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encode(isOrientationSwapped, forKey: .orientationSwapped)
@@ -64,7 +65,7 @@ class StarTych: Codable {
         try container.encode(images.map{ CodableCGImage(with: $0) }, forKey: .images)
     }
     
-    required init(from decoder: Decoder) throws {
+    public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         isOrientationSwapped = try container.decode(Bool.self, forKey: .orientationSwapped)
@@ -76,13 +77,13 @@ class StarTych: Codable {
         }
     }
     
-    init(borderWeight: Float) {
+    public init(borderWeight: Float) {
         borderColor = CGColor(colorSpace: CGColorSpaceCreateDeviceGray(), components: [255.0, 1.0])!
         innerBorderWeight = borderWeight
         outerBorderWeight = borderWeight
     }
     
-    func copyWithoutImages() -> StarTych {
+    public func copyWithoutImages() -> StarTych {
         let newTych = StarTych(borderWeight: innerBorderWeight)
         newTych.outerBorderWeight = outerBorderWeight
         newTych.borderColor = borderColor.copy()!
@@ -94,12 +95,12 @@ class StarTych: Codable {
         return nil
     }
     
-    func addImage(_ image: CGImage) {
+    public func addImage(_ image: CGImage) {
         averageColorCache = nil
         images.append(image)
     }
     
-    func removeImage(index: Int) {
+    public func removeImage(index: Int) {
         if index >= images.count {
             return
         }
@@ -144,11 +145,11 @@ class StarTych: Codable {
         images[index] = ImageUtils.copyImage(currentImage, maxSize: maxSize)
     }
     
-    func hasImage(index: Int) -> Bool {
+    public func hasImage(index: Int) -> Bool {
         return images.count > index
     }
     
-    func hasAnyImage() -> Bool {
+    public func hasAnyImage() -> Bool {
         return !images.isEmpty
     }
 }

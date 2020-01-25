@@ -9,13 +9,14 @@ import CoreGraphics
 import CoreServices
 import Foundation
 import ImageIO
+import ImageUtils
 
-class ImageFileManager {
-    static func createCGImage(from url: URL) -> CGImage? {
+public class ImageFileManager {
+    public static func createCGImage(from url: URL) -> CGImage? {
         return createCGImage(from: url, maxSize: 0)
     }
     
-    static func createCGImage(from url: URL, maxSize: Int) -> CGImage? {
+    public static func createCGImage(from url: URL, maxSize: Int) -> CGImage? {
         guard let source = CGImageSourceCreateWithURL(url as NSURL as CFURL, nil) else {
             return nil
         }
@@ -27,7 +28,7 @@ class ImageFileManager {
         return ImageUtils.createImage(from: source, maxSize: maxSize)
     }
     
-    static func write(image: CGImage, to url: URL) {
+    public static func write(image: CGImage, to url: URL) {
         // Default to TIFF
         var utType = kUTTypeTIFF
         
@@ -42,7 +43,7 @@ class ImageFileManager {
         write(image: image, to: url, utType: utType)
     }
     
-    static func write(image: CGImage, to url: URL, utType: CFString) {
+    public static func write(image: CGImage, to url: URL, utType: CFString) {
         guard let output = CGImageDestinationCreateWithURL(url as NSURL as CFURL, utType, 1, nil) else {
             return
         }

@@ -9,11 +9,11 @@ import CoreGraphics
 import Foundation
 import ImageIO
 
-class ImageUtils {
+public class ImageUtils {
     
     private static let alphaPremultipliedLast = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
     
-    static func copyImage(_ image: CGImage, maxSize: Int) -> CGImage {
+    public static func copyImage(_ image: CGImage, maxSize: Int) -> CGImage {
         let origWidth = Float(image.width)
         let origHeight = Float(image.height)
         if origWidth <= Float(maxSize) && origHeight <= Float(maxSize) {
@@ -29,7 +29,7 @@ class ImageUtils {
         return (canvas?.makeImage())!
     }
     
-    static func averageColorComponents(for image: CGImage) -> [CGFloat] {
+    public static func averageColorComponents(for image: CGImage) -> [CGFloat] {
         // Make the raw space to draw 1 pixel, 4 bytes
         let rawData = UnsafeMutableRawPointer.allocate(byteCount: 4, alignment: 1)
         
@@ -50,12 +50,12 @@ class ImageUtils {
         return comps
     }
     
-    static func averageColor(image: CGImage) -> CGColor? {
+    public static func averageColor(image: CGImage) -> CGColor? {
         let comps: [CGFloat] = averageColorComponents(for: image)
         return CGColor(colorSpace: CGColorSpaceCreateDeviceRGB(), components: comps)
     }
     
-    static func createImage(from source: CGImageSource, maxSize: Int) -> CGImage? {
+    public static func createImage(from source: CGImageSource, maxSize: Int) -> CGImage? {
         let metadata: NSDictionary? = CGImageSourceCopyProperties(source, nil)
         let orientation = metadata?[kCGImagePropertyOrientation] as? Int ?? 0
         
