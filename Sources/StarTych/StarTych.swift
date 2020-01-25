@@ -15,7 +15,7 @@ public class StarTych: Codable {
     public var innerBorderWeight: Float
     public var borderColor: CGColor
     
-    private var images = [CGImage]()
+    var images = [CGImage]()
     
     // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
@@ -92,11 +92,6 @@ public class StarTych: Codable {
         return newTych
     }
     
-    // TODO: Probably make non-optional, actually implement
-    public func makeStarTych() -> CGImage? {
-        return images.first
-    }
-    
     public func addImage(_ image: CGImage) {
         averageColorCache = nil
         images.append(image)
@@ -153,5 +148,36 @@ public class StarTych: Codable {
     
     public func hasAnyImage() -> Bool {
         return !images.isEmpty
+    }
+    
+    public func makeImage() -> CGImage? {
+        if images.isEmpty {
+            return nil
+        }
+        
+        let layout = LayoutInformation(for: self)
+        guard let canvas = CGContext(data: nil, width: layout.totalWidth, height: layout.totalHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
+            print("Something went wrong creating CGContext")
+            return nil
+        }
+        
+        canvas.setFillColor(borderColor)
+        canvas.fill(CGRect(x: 0, y: 0, width: layout.totalWidth, height: layout.totalHeight))
+        
+        var xOffset = layout.outerBorderSize
+        var yOffset = layout.outerBorderSize
+        if layout.isHorizontal {
+            for scaledImage in layout.scaledImagesInfo {
+                canvas.draw(scaledImage.image, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
+                xOffset += scaledImage.width + layout.innerBorderSize
+            }
+        } else {
+            for scaledImage in layout.scaledImagesInfo.reversed() {
+                canvas.draw(scaledImage.image, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
+                yOffset += scaledImage.height + layout.innerBorderSize
+            }
+        }
+        
+        return canvas.makeImage()
     }
 }

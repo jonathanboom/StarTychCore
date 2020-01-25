@@ -11,7 +11,7 @@ import ImageIO
 
 public class ImageUtils {
     
-    private static let alphaPremultipliedLast = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+    public static let alphaPremultipliedLast = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
     
     public static func copyImage(_ image: CGImage, maxSize: Int) -> CGImage {
         let origWidth = Float(image.width)
