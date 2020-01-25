@@ -9,13 +9,15 @@ import CoreGraphics
 import ImageUtils
 
 public class StarTych: Codable {
-    var isOrientationSwapped = false
-    var outerBorderWeight: Float
-    var innerBorderWeight: Float
-    var borderColor: CGColor
-    var images = [CGImage]()
     
-    // Need to invalidate this cache every time we change the images array
+    public var isOrientationSwapped = false
+    public var outerBorderWeight: Float
+    public var innerBorderWeight: Float
+    public var borderColor: CGColor
+    
+    private var images = [CGImage]()
+    
+    // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
     
     // This should really be synchronized to prevent concurrency issues
@@ -109,7 +111,7 @@ public class StarTych: Codable {
         images.remove(at: index)
     }
     
-    func setImage(at index: Int, image: CGImage) -> Int {
+    public func setImage(at index: Int, image: CGImage) -> Int {
         averageColorCache = nil
         if index < images.count {
             images[index] = image
@@ -120,7 +122,7 @@ public class StarTych: Codable {
         return images.count - 1
     }
     
-    func swapImage(firstIndex: Int, secondIndex: Int) {
+    public func swapImage(firstIndex: Int, secondIndex: Int) {
         // We don't need to invalidate the average color cache for a swap
         if firstIndex >= images.count || secondIndex >= images.count {
             return
@@ -131,7 +133,7 @@ public class StarTych: Codable {
         images[secondIndex] = swapImage
     }
     
-    func resizeImage(index: Int, maxSize: Int) {
+    public func resizeImage(index: Int, maxSize: Int) {
         // We don't need to invalidate the average color cache for a resize
         if index >= images.count {
             return
