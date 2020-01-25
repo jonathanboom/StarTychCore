@@ -151,8 +151,4 @@ class StarTych: Codable {
     func hasAnyImage() -> Bool {
         return !images.isEmpty
     }
-    
-    func setBorderColor(fromHexCode hex: String) {
-        
-    }
 }
