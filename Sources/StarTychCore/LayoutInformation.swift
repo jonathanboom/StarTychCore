@@ -15,13 +15,23 @@ struct LayoutInformation {
     let totalHeight: Int
     let scaledImagesInfo: [ScaledImageInformation]
     
-    init(for starTych: StarTych) {
+    init?(for starTych: StarTych) {
+        if !starTych.hasAnyImage() {
+            return nil
+        }
+        
         var portraitOrSquareCount = 0
+        var drawableImages = 0
         var minWidth = Int.max
         var minHeight = Int.max
         
         // Take a first pass over the images to compute the minimum dimensions and tally the number of portrait or square images
         for image in starTych.images {
+            if image.width == 0 || image.height == 0 {
+                continue
+            }
+            
+            drawableImages += 1
             if image.width < minWidth {
                 minWidth = image.width
             }
@@ -35,8 +45,13 @@ struct LayoutInformation {
             }
         }
         
+        if drawableImages == 0 {
+            print("ERROR: all images have at least one 0-dimension")
+            return nil
+        }
+        
         // If we have more portrait than landscape images, default orientation is horizontal
-        isHorizontal = portraitOrSquareCount * 2 >= starTych.images.count && !starTych.isOrientationSwapped
+        isHorizontal = portraitOrSquareCount * 2 >= drawableImages && !starTych.isOrientationSwapped
         
         // The dimension we need to pay attention to is height for horizontal layouts, width for vertical
         minDimension = isHorizontal ? minHeight : minWidth
@@ -46,17 +61,22 @@ struct LayoutInformation {
         var totalWidthSoFar = 2 * outerBorderSize
         var totalHeightSoFar = 2 * outerBorderSize
         if isHorizontal {
-            totalWidthSoFar += innerBorderSize * (starTych.images.count - 1)
+            totalWidthSoFar += innerBorderSize * (drawableImages - 1)
             totalHeightSoFar += minDimension
         }
         else {
             totalWidthSoFar += minDimension
-            totalHeightSoFar += innerBorderSize * (starTych.images.count - 1)
+            totalHeightSoFar += innerBorderSize * (drawableImages - 1)
         }
         
         // Compute the dimensions of the scaled images and the final dimensions in the same pass
         var scaledImages = [ScaledImageInformation]()
         for image in starTych.images {
+            // Don't compute for un-drawable images
+            if image.width == 0 || image.height == 0 {
+                continue
+            }
+            
             let scaleFactor = Float(minDimension) / Float(isHorizontal ? image.height : image.width)
             let scaledImageInfo = ScaledImageInformation(with: image, scaleFactor: scaleFactor)
             

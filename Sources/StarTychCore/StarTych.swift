@@ -155,7 +155,10 @@ public class StarTych: Codable {
             return nil
         }
         
-        let layout = LayoutInformation(for: self)
+        guard let layout = LayoutInformation(for: self) else {
+            return nil
+        }
+        
         guard let canvas = CGContext(data: nil, width: layout.totalWidth, height: layout.totalHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
             print("Something went wrong creating CGContext")
             return nil
