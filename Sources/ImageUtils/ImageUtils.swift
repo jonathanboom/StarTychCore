@@ -6,6 +6,7 @@
 //
 
 import CoreGraphics
+import CoreServices
 import Foundation
 import ImageIO
 import ObjectiveCHelpers
@@ -28,6 +29,16 @@ public class ImageUtils {
         let canvas = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: alphaPremultipliedLast.rawValue)
         canvas?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         return (canvas?.makeImage())!
+    }
+    
+    public static func fileIsImage(at url: URL) -> Bool {
+        let urlExtension = url.pathExtension as NSString as CFString
+        if let urlUtType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, urlExtension, nil)?.takeRetainedValue() {
+            if UTTypeConformsTo(urlUtType, kUTTypeImage) {
+                return true
+            }
+        }
+        return false
     }
     
     public static func averageColorComponents(for image: CGImage) -> [CGFloat] {

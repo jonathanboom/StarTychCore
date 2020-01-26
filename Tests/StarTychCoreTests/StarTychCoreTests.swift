@@ -1,5 +1,5 @@
 import XCTest
-@testable import StarTych
+@testable import StarTychCore
 
 final class StarTychCoreTests: XCTestCase {
     func testExample() {
