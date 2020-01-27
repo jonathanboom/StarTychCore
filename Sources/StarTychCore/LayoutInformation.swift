@@ -51,7 +51,12 @@ struct LayoutInformation {
         }
         
         // If we have more portrait than landscape images, default orientation is horizontal
-        isHorizontal = portraitOrSquareCount * 2 >= drawableImages && !starTych.isOrientationSwapped
+        let isDefaultHorizontal = portraitOrSquareCount * 2 >= drawableImages
+        if starTych.isOrientationSwapped {
+            isHorizontal = !isDefaultHorizontal
+        } else {
+            isHorizontal = isDefaultHorizontal
+        }
         
         // The dimension we need to pay attention to is height for horizontal layouts, width for vertical
         minDimension = isHorizontal ? minHeight : minWidth
