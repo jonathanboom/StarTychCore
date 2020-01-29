@@ -139,7 +139,11 @@ public class StarTych: Codable {
             return
         }
         
-        images[index] = ImageUtils.copyImage(currentImage, maxSize: maxSize)
+        guard let resizedImage = ImageUtils.copyImage(currentImage, maxSize: maxSize) else {
+            return
+        }
+        
+        images[index] = resizedImage
     }
     
     public func hasImage(index: Int) -> Bool {

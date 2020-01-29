@@ -15,7 +15,7 @@ public class ImageUtils {
     
     public static let alphaPremultipliedLast = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
     
-    public static func copyImage(_ image: CGImage, maxSize: Int) -> CGImage {
+    public static func copyImage(_ image: CGImage, maxSize: Int) -> CGImage? {
         let origWidth = Float(image.width)
         let origHeight = Float(image.height)
         if origWidth <= Float(maxSize) && origHeight <= Float(maxSize) {
@@ -26,9 +26,10 @@ public class ImageUtils {
         let width = Int(origWidth * scaleFactor)
         let height = Int(origHeight * scaleFactor)
         
-        let canvas = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: alphaPremultipliedLast.rawValue)
+        let colorSpace = image.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let canvas = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: alphaPremultipliedLast.rawValue)
         canvas?.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return (canvas?.makeImage())!
+        return canvas?.makeImage()
     }
     
     public static func fileIsImage(at url: URL) -> Bool {

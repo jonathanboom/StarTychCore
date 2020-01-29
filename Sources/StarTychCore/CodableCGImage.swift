@@ -6,13 +6,12 @@
 //
 
 import CoreGraphics
+import CoreServices
 import Foundation
 import ImageIO
 
 struct CodableCGImage: Codable {
     let image: CGImage
-    
-    private static let tiffType = "public.tiff" as NSString as CFString
     
     init(with anImage: CGImage) {
         image = anImage
@@ -27,8 +26,8 @@ struct CodableCGImage: Codable {
             throw EncodingError.invalidValue(image, EncodingError.Context(codingPath: [CodingKeys.imageData], debugDescription: "Could not create CFMutableData while encoding CGImage"))
         }
         
-        guard let imageDestination = CGImageDestinationCreateWithData(imageData, CodableCGImage.tiffType, 1, nil) else {
-                throw EncodingError.invalidValue(image, EncodingError.Context(codingPath: [CodingKeys.imageData], debugDescription: "Could not create CGImageDestination while encoding CGImage"))
+        guard let imageDestination = CGImageDestinationCreateWithData(imageData, kUTTypeTIFF, 1, nil) else {
+            throw EncodingError.invalidValue(image, EncodingError.Context(codingPath: [CodingKeys.imageData], debugDescription: "Could not create CGImageDestination while encoding CGImage"))
         }
         
         CGImageDestinationAddImage(imageDestination, image, nil)

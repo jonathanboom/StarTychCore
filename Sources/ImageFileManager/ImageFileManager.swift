@@ -29,18 +29,19 @@ public class ImageFileManager {
     }
     
     public static func write(image: CGImage, to url: URL) {
-        // Default to TIFF
-        var utType = kUTTypeTIFF
-        
-        // If the URL extension is an image type, use that instead
+        // Default to TIFF if the URL path doesn't imply a different image type
+        write(image: image, to: url, utType: imageUtType(for: url) ?? kUTTypeTIFF)
+    }
+    
+    static func imageUtType(for url: URL) -> CFString? {
         let urlExtension = url.pathExtension as NSString as CFString
         if let urlUtType = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, urlExtension, nil)?.takeRetainedValue() {
             if UTTypeConformsTo(urlUtType, kUTTypeImage) {
-                utType = urlUtType
+                return urlUtType
             }
         }
         
-        write(image: image, to: url, utType: utType)
+        return nil
     }
     
     public static func write(image: CGImage, to url: URL, utType: CFString) {
