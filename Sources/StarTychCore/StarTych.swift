@@ -6,6 +6,7 @@
 //
 
 import CoreGraphics
+import ImageIO
 import ImageUtils
 
 public class StarTych: Codable {
@@ -104,10 +105,11 @@ public class StarTych: Codable {
         return newTych
     }
     
-    public func addImage(_ image: CGImage) {
+    public func addImage(_ image: CGImage, orientation: CGImagePropertyOrientation = .up) {
         averageColorCache = nil
-        images.append(image)
-        previewImages.append(ImageUtils.copyImage(image, maxSize: maxPreviewSize)!)
+        let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
+        images.append(correctedImage)
+        previewImages.append(ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!)
     }
     
     public func removeImage(index: Int) {
@@ -120,11 +122,12 @@ public class StarTych: Codable {
         previewImages.remove(at: index)
     }
     
-    public func setImage(at index: Int, image: CGImage) -> Int {
+    public func setImage(at index: Int, image: CGImage, orientation: CGImagePropertyOrientation = .up) -> Int {
         averageColorCache = nil
         if index < images.count {
-            images[index] = image
-            previewImages[index] = ImageUtils.copyImage(image, maxSize: maxPreviewSize)!
+            let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
+            images[index] = correctedImage
+            previewImages[index] = ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!
             return index
         }
         

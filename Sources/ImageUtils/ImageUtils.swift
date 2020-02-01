@@ -76,28 +76,40 @@ public class ImageUtils {
             return image
         }
         
+        return drawImage(image, size: CGSize(width: width, height: height), orientation: orientation)
+    }
+    
+    public static func imageWithCorrectedOrientation(_ image: CGImage, orientation: CGImagePropertyOrientation) -> CGImage? {
+        if orientation == .up {
+            return image
+        }
+        
+        return drawImage(image, size: CGSize(width: image.width, height: image.height), orientation: orientation)
+    }
+    
+    private static func drawImage(_ image: CGImage, size: CGSize, orientation: CGImagePropertyOrientation) -> CGImage? {
         let canvasWidth: Int
         let canvasHeight: Int
         switch orientation {
         case .leftMirrored, .right, .rightMirrored, .left:
             // Left and right orientations are rotated 90 degrees, so they swap width and height
-            canvasWidth = Int(height)
-            canvasHeight = Int(width)
+            canvasWidth = Int(size.height)
+            canvasHeight = Int(size.width)
         default:
             // All other orientations retain width and height
-            canvasWidth = Int(width)
-            canvasHeight = Int(height)
+            canvasWidth = Int(size.width)
+            canvasHeight = Int(size.height)
         }
         
         guard let canvas = CGContext(data: nil, width: canvasWidth, height: canvasHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: alphaPremultipliedLast.rawValue) else {
             return nil
         }
         
-        if let transformation = transformationToCorrectOrientation(for: orientation, width: width, height: height) {
+        if let transformation = transformationToCorrectOrientation(for: orientation, width: size.width, height: size.height) {
             canvas.concatenate(transformation)
         }
         
-        canvas.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        canvas.draw(image, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         return canvas.makeImage()
     }
     
