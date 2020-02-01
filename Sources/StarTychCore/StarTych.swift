@@ -14,7 +14,14 @@ public class StarTych: Codable {
     public var outerBorderWeight: Float
     public var innerBorderWeight: Float
     public var borderColor: CGColor
-    public var maxPreviewSize = 800
+    
+    public var maxPreviewSize = 800 {
+        didSet {
+            previewImages = images.map {
+                ImageUtils.copyImage($0, maxSize: maxPreviewSize)!
+            }
+        }
+    }
     
     var images = [CGImage]()
     var previewImages = [CGImage]()
