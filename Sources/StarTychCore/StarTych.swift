@@ -14,8 +14,10 @@ public class StarTych: Codable {
     public var outerBorderWeight: Float
     public var innerBorderWeight: Float
     public var borderColor: CGColor
+    public var maxPreviewSize = 800
     
     var images = [CGImage]()
+    var previewImages = [CGImage]()
     
     // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
@@ -77,6 +79,9 @@ public class StarTych: Codable {
         images = try container.decode(Array<CodableCGImage>.self, forKey: .images).map {
             $0.image
         }
+        previewImages = images.map {
+            ImageUtils.copyImage($0, maxSize: maxPreviewSize)!
+        }
     }
     
     public init(borderWeight: Float) {
@@ -95,6 +100,7 @@ public class StarTych: Codable {
     public func addImage(_ image: CGImage) {
         averageColorCache = nil
         images.append(image)
+        previewImages.append(ImageUtils.copyImage(image, maxSize: maxPreviewSize)!)
     }
     
     public func removeImage(index: Int) {
@@ -104,16 +110,18 @@ public class StarTych: Codable {
         
         averageColorCache = nil
         images.remove(at: index)
+        previewImages.remove(at: index)
     }
     
     public func setImage(at index: Int, image: CGImage) -> Int {
         averageColorCache = nil
         if index < images.count {
             images[index] = image
+            previewImages[index] = ImageUtils.copyImage(image, maxSize: maxPreviewSize)!
             return index
         }
         
-        images.append(image)
+        addImage(image)
         return images.count - 1
     }
     
@@ -126,6 +134,10 @@ public class StarTych: Codable {
         let swapImage = images[firstIndex]
         images[firstIndex] = images[secondIndex]
         images[secondIndex] = swapImage
+        
+        let previewSwap = previewImages[firstIndex]
+        previewImages[firstIndex] = previewImages[secondIndex]
+        previewImages[secondIndex] = previewSwap
     }
     
     public func resizeImage(index: Int, maxSize: Int) {
@@ -154,12 +166,12 @@ public class StarTych: Codable {
         return !images.isEmpty
     }
     
-    public func makeImage() -> CGImage? {
+    public func makeImage(isPreview: Bool = false) -> CGImage? {
         if images.isEmpty {
             return nil
         }
         
-        guard let layout = LayoutInformation(for: self) else {
+        guard let layout = LayoutInformation(for: self, isPreview: isPreview) else {
             return nil
         }
         

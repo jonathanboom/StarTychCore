@@ -15,10 +15,12 @@ struct LayoutInformation {
     let totalHeight: Int
     let scaledImagesInfo: [ScaledImageInformation]
     
-    init?(for starTych: StarTych) {
+    init?(for starTych: StarTych, isPreview: Bool = false) {
         if !starTych.hasAnyImage() {
             return nil
         }
+        
+        let imagesForLayout = isPreview ? starTych.previewImages : starTych.images
         
         var portraitOrSquareCount = 0
         var drawableImages = 0
@@ -26,7 +28,7 @@ struct LayoutInformation {
         var minHeight = Int.max
         
         // Take a first pass over the images to compute the minimum dimensions and tally the number of portrait or square images
-        for image in starTych.images {
+        for image in imagesForLayout {
             if image.width == 0 || image.height == 0 {
                 continue
             }
@@ -76,7 +78,7 @@ struct LayoutInformation {
         
         // Compute the dimensions of the scaled images and the final dimensions in the same pass
         var scaledImages = [ScaledImageInformation]()
-        for image in starTych.images {
+        for image in imagesForLayout {
             // Don't compute for un-drawable images
             if image.width == 0 || image.height == 0 {
                 continue
