@@ -168,8 +168,8 @@ public class StarTych: Codable {
         images[index] = resizedImage
     }
     
-    public func hasImage(index: Int) -> Bool {
-        return images.count > index
+    public func imageCount() -> Int {
+        return images.count
     }
     
     public func hasAnyImage() -> Bool {
