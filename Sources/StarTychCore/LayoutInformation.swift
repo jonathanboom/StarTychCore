@@ -20,7 +20,9 @@ struct LayoutInformation {
             return nil
         }
         
-        let imagesForLayout = isPreview ? starTych.previewImages : starTych.images
+        let imagesForLayout = isPreview
+            ? starTych.previewImages
+            : starTych.images.map { $0.getCroppedFullImage()! }
         
         var portraitOrSquareCount = 0
         var drawableImages = 0

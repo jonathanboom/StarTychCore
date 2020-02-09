@@ -19,12 +19,12 @@ public class StarTych: Codable {
     public var maxPreviewSize = 800 {
         didSet {
             previewImages = images.map {
-                ImageUtils.copyImage($0, maxSize: maxPreviewSize)!
+                $0.getCroppedImage(maxSize: maxPreviewSize)!
             }
         }
     }
     
-    var images = [CGImage]()
+    var images = [CroppableImage]()
     var previewImages = [CGImage]()
     
     // NB: Need to invalidate this cache every time we change the images array
@@ -41,7 +41,7 @@ public class StarTych: Codable {
         }
         
         let sumComponents: [CGFloat] = images
-            .map { ImageUtils.averageColorComponents(for: $0) }
+            .map { ImageUtils.averageColorComponents(for: $0.originalImage) }
             .reduce([0.0, 0.0, 0.0]) {
                 [
                     $0[0] + $1[0],
@@ -74,7 +74,7 @@ public class StarTych: Codable {
         try container.encode(outerBorderWeight, forKey: .outerBorder)
         try container.encode(innerBorderWeight, forKey: .innerBorder)
         try container.encode(CodableCGColor(with: borderColor), forKey: .borderColor)
-        try container.encode(images.map{ CodableCGImage(with: $0) }, forKey: .images)
+        try container.encode(images, forKey: .images)
     }
     
     public required init(from decoder: Decoder) throws {
@@ -84,11 +84,9 @@ public class StarTych: Codable {
         outerBorderWeight = try container.decode(Float.self, forKey: .outerBorder)
         innerBorderWeight = try container.decode(Float.self, forKey: .innerBorder)
         borderColor = try container.decode(CodableCGColor.self, forKey: .borderColor).color
-        images = try container.decode(Array<CodableCGImage>.self, forKey: .images).map {
-            $0.image
-        }
+        images = try container.decode(Array<CroppableImage>.self, forKey: .images)
         previewImages = images.map {
-            ImageUtils.copyImage($0, maxSize: maxPreviewSize)!
+            $0.getCroppedImage(maxSize: maxPreviewSize)!
         }
     }
     
@@ -108,7 +106,7 @@ public class StarTych: Codable {
     public func addImage(_ image: CGImage, orientation: CGImagePropertyOrientation = .up) {
         averageColorCache = nil
         let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
-        images.append(correctedImage)
+        images.append(CroppableImage(image: correctedImage))
         previewImages.append(ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!)
     }
     
@@ -126,7 +124,7 @@ public class StarTych: Codable {
         averageColorCache = nil
         if index < images.count {
             let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
-            images[index] = correctedImage
+            images[index] = CroppableImage(image: correctedImage)
             previewImages[index] = ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!
             return index
         }
@@ -148,24 +146,6 @@ public class StarTych: Codable {
         let previewSwap = previewImages[firstIndex]
         previewImages[firstIndex] = previewImages[secondIndex]
         previewImages[secondIndex] = previewSwap
-    }
-    
-    public func resizeImage(index: Int, maxSize: Int) {
-        // We don't need to invalidate the average color cache for a resize
-        if index >= images.count {
-            return
-        }
-        
-        let currentImage = images[index]
-        if currentImage.width <= maxSize && currentImage.height < maxSize {
-            return
-        }
-        
-        guard let resizedImage = ImageUtils.copyImage(currentImage, maxSize: maxSize) else {
-            return
-        }
-        
-        images[index] = resizedImage
     }
     
     public func imageCount() -> Int {
