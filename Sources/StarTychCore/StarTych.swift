@@ -16,16 +16,7 @@ public class StarTych: Codable {
     public var innerBorderWeight: Float
     public var borderColor: CGColor
     
-    public var maxPreviewSize = 800 {
-        didSet {
-            previewImages = images.map {
-                $0.getCroppedImage(maxSize: maxPreviewSize)!
-            }
-        }
-    }
-    
     var images = [CroppableImage]()
-    var previewImages = [CGImage]()
     
     // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
@@ -85,9 +76,6 @@ public class StarTych: Codable {
         innerBorderWeight = try container.decode(Float.self, forKey: .innerBorder)
         borderColor = try container.decode(CodableCGColor.self, forKey: .borderColor).color
         images = try container.decode(Array<CroppableImage>.self, forKey: .images)
-        previewImages = images.map {
-            $0.getCroppedImage(maxSize: maxPreviewSize)!
-        }
     }
     
     public init(borderWeight: Float) {
@@ -96,18 +84,10 @@ public class StarTych: Codable {
         outerBorderWeight = borderWeight
     }
     
-    public func copyWithoutImages() -> StarTych {
-        let newTych = StarTych(borderWeight: innerBorderWeight)
-        newTych.outerBorderWeight = outerBorderWeight
-        newTych.borderColor = borderColor.copy()!
-        return newTych
-    }
-    
     public func addImage(_ image: CGImage, orientation: CGImagePropertyOrientation = .up) {
         averageColorCache = nil
         let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
         images.append(CroppableImage(image: correctedImage))
-        previewImages.append(ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!)
     }
     
     public func removeImage(index: Int) {
@@ -117,7 +97,6 @@ public class StarTych: Codable {
         
         averageColorCache = nil
         images.remove(at: index)
-        previewImages.remove(at: index)
     }
     
     public func setImage(at index: Int, image: CGImage, orientation: CGImagePropertyOrientation = .up) -> Int {
@@ -125,7 +104,6 @@ public class StarTych: Codable {
         if index < images.count {
             let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
             images[index] = CroppableImage(image: correctedImage)
-            previewImages[index] = ImageUtils.copyImage(correctedImage, maxSize: maxPreviewSize)!
             return index
         }
         
@@ -142,10 +120,6 @@ public class StarTych: Codable {
         let swapImage = images[firstIndex]
         images[firstIndex] = images[secondIndex]
         images[secondIndex] = swapImage
-        
-        let previewSwap = previewImages[firstIndex]
-        previewImages[firstIndex] = previewImages[secondIndex]
-        previewImages[secondIndex] = previewSwap
     }
     
     public func imageCount() -> Int {
@@ -156,16 +130,16 @@ public class StarTych: Codable {
         return !images.isEmpty
     }
     
-    public func makeImage(isPreview: Bool = false) -> CGImage? {
+    public func makeImage(in frame: CGSize? = nil) -> CGImage? {
         if images.isEmpty {
             return nil
         }
         
-        guard let layout = LayoutInformation(for: self, isPreview: isPreview) else {
+        guard let layout = LayoutInformation(for: self, in: frame) else {
             return nil
         }
         
-        guard let canvas = CGContext(data: nil, width: layout.totalWidth, height: layout.totalHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
+        guard let canvas = CGContext(data: nil, width: Int(layout.totalWidth), height: Int(layout.totalHeight), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
             print("Something went wrong creating CGContext")
             return nil
         }
@@ -177,12 +151,12 @@ public class StarTych: Codable {
         var yOffset = layout.outerBorderSize
         if layout.isHorizontal {
             for scaledImage in layout.scaledImagesInfo {
-                canvas.draw(scaledImage.image, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
+                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
                 xOffset += scaledImage.width + layout.innerBorderSize
             }
         } else {
             for scaledImage in layout.scaledImagesInfo.reversed() {
-                canvas.draw(scaledImage.image, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
+                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
                 yOffset += scaledImage.height + layout.innerBorderSize
             }
         }

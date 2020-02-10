@@ -9,13 +9,19 @@ import CoreGraphics
 
 struct ScaledImageInformation {
     
-    let image: CGImage
-    let width: Int
-    let height: Int
+    let image: CroppableImage
+    let width: CGFloat
+    let height: CGFloat
     
-    init(with anImage: CGImage, scaleFactor: Float) {
-        image = anImage
-        width = Int(Float(image.width) * scaleFactor)
-        height = Int(Float(image.height) * scaleFactor)
+    func copy(scale: CGFloat) -> ScaledImageInformation {
+        return ScaledImageInformation(image: image, width: width * scale, height: height * scale)
+    }
+}
+
+extension ScaledImageInformation {
+    init(with anImage: CroppableImage, scaleFactor: CGFloat) {
+        self.init(image: anImage,
+                  width: CGFloat(anImage.width) * scaleFactor,
+                  height: CGFloat(anImage.height) * scaleFactor)
     }
 }

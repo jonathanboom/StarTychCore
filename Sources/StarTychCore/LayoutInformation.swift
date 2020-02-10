@@ -5,24 +5,21 @@
 //  Created by Jonathan Lynch on 1/25/20.
 //
 
+import CoreGraphics
+
 struct LayoutInformation {
     
     let isHorizontal: Bool
-    let minDimension: Int
-    let innerBorderSize: Int
-    let outerBorderSize: Int
-    let totalWidth: Int
-    let totalHeight: Int
+    let innerBorderSize: CGFloat
+    let outerBorderSize: CGFloat
+    let totalWidth: CGFloat
+    let totalHeight: CGFloat
     let scaledImagesInfo: [ScaledImageInformation]
     
-    init?(for starTych: StarTych, isPreview: Bool = false) {
+    init?(for starTych: StarTych, in frame: CGSize? = nil) {
         if !starTych.hasAnyImage() {
             return nil
         }
-        
-        let imagesForLayout = isPreview
-            ? starTych.previewImages
-            : starTych.images.map { $0.getCroppedFullImage()! }
         
         var portraitOrSquareCount = 0
         var drawableImages = 0
@@ -30,7 +27,7 @@ struct LayoutInformation {
         var minHeight = Int.max
         
         // Take a first pass over the images to compute the minimum dimensions and tally the number of portrait or square images
-        for image in imagesForLayout {
+        for image in starTych.images {
             if image.width == 0 || image.height == 0 {
                 continue
             }
@@ -63,30 +60,30 @@ struct LayoutInformation {
         }
         
         // The dimension we need to pay attention to is height for horizontal layouts, width for vertical
-        minDimension = isHorizontal ? minHeight : minWidth
-        outerBorderSize = Int(Float(minDimension) * starTych.outerBorderWeight)
-        innerBorderSize = Int(Float(minDimension) * starTych.innerBorderWeight)
+        let minDimension = CGFloat(isHorizontal ? minHeight : minWidth)
+        let fullOuterBorderSize = Int(minDimension * CGFloat(starTych.outerBorderWeight))
+        let fullInnerBorderSize = Int(minDimension * CGFloat(starTych.innerBorderWeight))
         
-        var totalWidthSoFar = 2 * outerBorderSize
-        var totalHeightSoFar = 2 * outerBorderSize
+        var totalWidthSoFar = 2 * CGFloat(fullOuterBorderSize)
+        var totalHeightSoFar = 2 * CGFloat(fullOuterBorderSize)
         if isHorizontal {
-            totalWidthSoFar += innerBorderSize * (drawableImages - 1)
+            totalWidthSoFar += CGFloat(fullInnerBorderSize * (drawableImages - 1))
             totalHeightSoFar += minDimension
         }
         else {
             totalWidthSoFar += minDimension
-            totalHeightSoFar += innerBorderSize * (drawableImages - 1)
+            totalHeightSoFar += CGFloat(fullInnerBorderSize * (drawableImages - 1))
         }
         
         // Compute the dimensions of the scaled images and the final dimensions in the same pass
         var scaledImages = [ScaledImageInformation]()
-        for image in imagesForLayout {
+        for image in starTych.images {
             // Don't compute for un-drawable images
             if image.width == 0 || image.height == 0 {
                 continue
             }
             
-            let scaleFactor = Float(minDimension) / Float(isHorizontal ? image.height : image.width)
+            let scaleFactor = minDimension / CGFloat(isHorizontal ? image.height : image.width)
             let scaledImageInfo = ScaledImageInformation(with: image, scaleFactor: scaleFactor)
             
             if isHorizontal {
@@ -98,8 +95,39 @@ struct LayoutInformation {
             scaledImages.append(scaledImageInfo)
         }
         
-        scaledImagesInfo = scaledImages
-        totalWidth = totalWidthSoFar
-        totalHeight = totalHeightSoFar
+        if let frameWidth = frame?.width, let frameHeight = frame?.height {
+            let frameAspect = LayoutInformation.aspectRatio(width: frameWidth, height: frameHeight)
+            let imageAspect = LayoutInformation.aspectRatio(width: totalWidthSoFar, height: totalHeightSoFar)
+            
+            var scale: CGFloat = 1.0
+            if imageAspect > frameAspect && totalWidthSoFar > frameWidth {
+                // Width dominates
+                scale = frameWidth / totalWidthSoFar
+            } else if totalHeightSoFar > frameHeight {
+                scale = frameHeight / totalHeightSoFar
+            }
+            
+            scaledImagesInfo = scaledImages.map { $0.copy(scale: scale) }
+            totalWidth = totalWidthSoFar * scale
+            totalHeight = totalHeightSoFar * scale
+            outerBorderSize = CGFloat(fullOuterBorderSize) * scale
+            innerBorderSize = CGFloat(fullInnerBorderSize) * scale
+            
+        } else {
+            scaledImagesInfo = scaledImages
+            totalWidth = totalWidthSoFar
+            totalHeight = totalHeightSoFar
+            outerBorderSize = CGFloat(fullOuterBorderSize)
+            innerBorderSize = CGFloat(fullInnerBorderSize)
+        }
+    }
+    
+    // Width:height aspect ratio as a decimal; 16:9 would be 1.777...
+    private static func aspectRatio(width: CGFloat, height: CGFloat) -> CGFloat {
+        if width.isZero || height.isZero {
+            return 0.0
+        }
+        
+        return width / height
     }
 }
