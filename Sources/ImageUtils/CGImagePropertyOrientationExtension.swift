@@ -5,6 +5,8 @@
 //  Created by Jonathan Lynch on 2/1/20.
 //
 
+#if !os(macOS)
+
 import ImageIO
 import UIKit
 
@@ -33,3 +35,5 @@ public extension CGImagePropertyOrientation {
         }
     }
 }
+
+#endif
