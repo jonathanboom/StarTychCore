@@ -123,7 +123,7 @@ struct LayoutInformation {
     }
     
     // Width:height aspect ratio as a decimal; 16:9 would be 1.777...
-    private static func aspectRatio(width: CGFloat, height: CGFloat) -> CGFloat {
+    static func aspectRatio(width: CGFloat, height: CGFloat) -> CGFloat {
         if width.isZero || height.isZero {
             return 0.0
         }
