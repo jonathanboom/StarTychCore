@@ -139,70 +139,19 @@ public class StarTych: Codable {
             return nil
         }
         
-        guard let canvas = CGContext(data: nil, width: Int(layout.totalWidth), height: Int(layout.totalHeight), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
+        guard let canvas = CGContext(data: nil, width: layout.canvasWidth, height: layout.canvasHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
             print("Something went wrong creating CGContext")
             return nil
         }
         
-        canvas.setFillColor(borderColor)
-        canvas.fill(CGRect(x: 0, y: 0, width: layout.totalWidth, height: layout.totalHeight))
-        
-        var xOffset = layout.outerBorderSize
-        var yOffset = layout.outerBorderSize
-        if layout.isHorizontal {
-            for scaledImage in layout.scaledImagesInfo {
-                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
-                xOffset += scaledImage.width + layout.innerBorderSize
+        if let scale = layout.canvasScale {
+            if scale < 1.0 {
+                canvas.scaleBy(x: scale, y: scale)
             }
-        } else {
-            for scaledImage in layout.scaledImagesInfo.reversed() {
-                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
-                yOffset += scaledImage.height + layout.innerBorderSize
-            }
-        }
-        
-        return canvas.makeImage()
-    }
-    
-    public func makeImagePostScale(in frame: CGSize? = nil) -> CGImage? {
-        if images.isEmpty {
-            return nil
-        }
-        
-        guard let layout = LayoutInformation(for: self) else {
-            return nil
-        }
-        
-        var scale: CGFloat = 1.0
-        var canvasWidth = layout.totalWidth
-        var canvasHeight = layout.totalHeight
-        if let frameWidth = frame?.width, let frameHeight = frame?.height {
-            let frameAspect = LayoutInformation.aspectRatio(width: frameWidth, height: frameHeight)
-            let imageAspect = LayoutInformation.aspectRatio(width: layout.totalWidth, height: layout.totalHeight)
-            
-            if imageAspect > frameAspect && layout.totalWidth > frameWidth {
-                // Width dominates
-                scale = frameWidth / layout.totalWidth
-                canvasWidth = frameWidth
-                canvasHeight = layout.totalHeight * scale
-            } else if layout.totalHeight > frameHeight {
-                scale = frameHeight / layout.totalHeight
-                canvasWidth = layout.totalWidth * scale
-                canvasHeight = frameHeight
-            }
-        }
-        
-        guard let canvas = CGContext(data: nil, width: Int(canvasWidth), height: Int(canvasHeight), bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
-            print("Something went wrong creating CGContext")
-            return nil
-        }
-        
-        if scale < 1.0 {
-            canvas.scaleBy(x: scale, y: scale)
         }
         
         canvas.setFillColor(borderColor)
-        canvas.fill(CGRect(x: 0, y: 0, width: layout.totalWidth, height: layout.totalHeight))
+        canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
         
         var xOffset = layout.outerBorderSize
         var yOffset = layout.outerBorderSize

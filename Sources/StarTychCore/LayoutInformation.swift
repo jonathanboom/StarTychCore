@@ -10,10 +10,15 @@ import CoreGraphics
 struct LayoutInformation {
     
     let isHorizontal: Bool
-    let innerBorderSize: CGFloat
-    let outerBorderSize: CGFloat
-    let totalWidth: CGFloat
-    let totalHeight: CGFloat
+    let innerBorderSize: Int
+    let outerBorderSize: Int
+    let fullWidth: Int
+    let fullHeight: Int
+    
+    let canvasWidth: Int
+    let canvasHeight: Int
+    let canvasScale: CGFloat?
+    
     let scaledImagesInfo: [ScaledImageInformation]
     
     init?(for starTych: StarTych, in frame: CGSize? = nil) {
@@ -60,19 +65,19 @@ struct LayoutInformation {
         }
         
         // The dimension we need to pay attention to is height for horizontal layouts, width for vertical
-        let minDimension = CGFloat(isHorizontal ? minHeight : minWidth)
-        let fullOuterBorderSize = Int(minDimension * CGFloat(starTych.outerBorderWeight))
-        let fullInnerBorderSize = Int(minDimension * CGFloat(starTych.innerBorderWeight))
+        let minDimension = isHorizontal ? minHeight : minWidth
+        outerBorderSize = Int(Float(minDimension) * starTych.outerBorderWeight)
+        innerBorderSize = Int(Float(minDimension) * starTych.innerBorderWeight)
         
-        var totalWidthSoFar = 2 * CGFloat(fullOuterBorderSize)
-        var totalHeightSoFar = 2 * CGFloat(fullOuterBorderSize)
+        var totalWidthSoFar = 2 * outerBorderSize
+        var totalHeightSoFar = 2 * outerBorderSize
         if isHorizontal {
-            totalWidthSoFar += CGFloat(fullInnerBorderSize * (drawableImages - 1))
+            totalWidthSoFar += innerBorderSize * (drawableImages - 1)
             totalHeightSoFar += minDimension
         }
         else {
             totalWidthSoFar += minDimension
-            totalHeightSoFar += CGFloat(fullInnerBorderSize * (drawableImages - 1))
+            totalHeightSoFar += innerBorderSize * (drawableImages - 1)
         }
         
         // Compute the dimensions of the scaled images and the final dimensions in the same pass
@@ -83,7 +88,7 @@ struct LayoutInformation {
                 continue
             }
             
-            let scaleFactor = minDimension / CGFloat(isHorizontal ? image.height : image.width)
+            let scaleFactor = Float(minDimension) / Float(isHorizontal ? image.height : image.width)
             let scaledImageInfo = ScaledImageInformation(with: image, scaleFactor: scaleFactor)
             
             if isHorizontal {
@@ -95,39 +100,49 @@ struct LayoutInformation {
             scaledImages.append(scaledImageInfo)
         }
         
+        fullWidth = totalWidthSoFar
+        fullHeight = totalHeightSoFar
+        scaledImagesInfo = scaledImages
+
         if let frameWidth = frame?.width, let frameHeight = frame?.height {
             let frameAspect = LayoutInformation.aspectRatio(width: frameWidth, height: frameHeight)
             let imageAspect = LayoutInformation.aspectRatio(width: totalWidthSoFar, height: totalHeightSoFar)
             
-            var scale: CGFloat = 1.0
-            if imageAspect > frameAspect && totalWidthSoFar > frameWidth {
+            if imageAspect > frameAspect && CGFloat(totalWidthSoFar) > frameWidth {
                 // Width dominates
-                scale = frameWidth / totalWidthSoFar
-            } else if totalHeightSoFar > frameHeight {
-                scale = frameHeight / totalHeightSoFar
+                canvasScale = frameWidth / CGFloat(totalWidthSoFar)
+                canvasWidth = Int(frameWidth)
+                canvasHeight = Int(CGFloat(totalHeightSoFar) * canvasScale!)
+            } else if CGFloat(totalHeightSoFar) > frameHeight {
+                canvasScale = frameHeight / CGFloat(totalHeightSoFar)
+                canvasWidth = Int(CGFloat(totalWidthSoFar) * canvasScale!)
+                canvasHeight = Int(frameHeight)
+            } else {
+                canvasScale = nil
+                canvasWidth = totalWidthSoFar
+                canvasHeight = totalHeightSoFar
             }
-            
-            scaledImagesInfo = scaledImages.map { $0.copy(scale: scale) }
-            totalWidth = totalWidthSoFar * scale
-            totalHeight = totalHeightSoFar * scale
-            outerBorderSize = CGFloat(fullOuterBorderSize) * scale
-            innerBorderSize = CGFloat(fullInnerBorderSize) * scale
-            
         } else {
-            scaledImagesInfo = scaledImages
-            totalWidth = totalWidthSoFar
-            totalHeight = totalHeightSoFar
-            outerBorderSize = CGFloat(fullOuterBorderSize)
-            innerBorderSize = CGFloat(fullInnerBorderSize)
+            canvasScale = nil
+            canvasWidth = totalWidthSoFar
+            canvasHeight = totalHeightSoFar
         }
     }
     
     // Width:height aspect ratio as a decimal; 16:9 would be 1.777...
-    static func aspectRatio(width: CGFloat, height: CGFloat) -> CGFloat {
+    private static func aspectRatio(width: CGFloat, height: CGFloat) -> CGFloat {
         if width.isZero || height.isZero {
             return 0.0
         }
         
         return width / height
+    }
+    
+    private static func aspectRatio(width: Int, height: Int) -> CGFloat {
+        if width == 0 || height == 0 {
+            return 0.0
+        }
+        
+        return CGFloat(width) / CGFloat(height)
     }
 }
