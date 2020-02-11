@@ -16,7 +16,7 @@ public class StarTych: Codable {
     public var innerBorderWeight: Float
     public var borderColor: CGColor
     
-    var images = [CroppableImage]() {
+    public var images = [CroppableImage]() {
         didSet {
             // Need to invalidate this cache every time we change the images array
             averageColorCache = nil
@@ -62,7 +62,7 @@ public class StarTych: Codable {
         return averageColorCache
     }
     
-    enum CodingKeys: CodingKey {
+    private enum CodingKeys: CodingKey {
         case orientationSwapped
         case outerBorder
         case innerBorder
@@ -97,38 +97,17 @@ public class StarTych: Codable {
     }
     
     public func addImage(_ image: CGImage, orientation: CGImagePropertyOrientation = .up) {
-        let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
-        images.append(CroppableImage(image: correctedImage))
-    }
-    
-    public func removeImage(index: Int) {
-        if index >= images.count {
-            return
-        }
-        
-        images.remove(at: index)
+        images.append(CroppableImage(image: image, orientation: orientation))
     }
     
     public func setImage(at index: Int, image: CGImage, orientation: CGImagePropertyOrientation = .up) -> Int {
         if index < images.count {
-            let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
-            images[index] = CroppableImage(image: correctedImage)
+            images[index] = CroppableImage(image: image, orientation: orientation)
             return index
         }
         
         addImage(image)
         return images.count - 1
-    }
-    
-    public func swapImage(firstIndex: Int, secondIndex: Int) {
-        // We don't need to invalidate the average color cache for a swap
-        if firstIndex >= images.count || secondIndex >= images.count {
-            return
-        }
-        
-        let swapImage = images[firstIndex]
-        images[firstIndex] = images[secondIndex]
-        images[secondIndex] = swapImage
     }
     
     public func makeImage(in frame: CGSize? = nil) -> CGImage? {
