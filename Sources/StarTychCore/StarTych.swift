@@ -16,7 +16,12 @@ public class StarTych: Codable {
     public var innerBorderWeight: Float
     public var borderColor: CGColor
     
-    var images = [CroppableImage]()
+    var images = [CroppableImage]() {
+        didSet {
+            // Need to invalidate this cache every time we change the images array
+            averageColorCache = nil
+        }
+    }
     
     public var imageCount: Int {
         return self.images.count
@@ -26,10 +31,9 @@ public class StarTych: Codable {
         return !self.images.isEmpty
     }
     
-    // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
     
-    // This should really be synchronized to prevent concurrency issues
+    // This should probably be synchronized to prevent concurrency issues
     public var averageColor: CGColor? {
         if let cachedAverage = averageColorCache {
             return cachedAverage
@@ -93,7 +97,6 @@ public class StarTych: Codable {
     }
     
     public func addImage(_ image: CGImage, orientation: CGImagePropertyOrientation = .up) {
-        averageColorCache = nil
         let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
         images.append(CroppableImage(image: correctedImage))
     }
@@ -103,12 +106,10 @@ public class StarTych: Codable {
             return
         }
         
-        averageColorCache = nil
         images.remove(at: index)
     }
     
     public func setImage(at index: Int, image: CGImage, orientation: CGImagePropertyOrientation = .up) -> Int {
-        averageColorCache = nil
         if index < images.count {
             let correctedImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
             images[index] = CroppableImage(image: correctedImage)
