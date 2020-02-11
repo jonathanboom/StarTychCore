@@ -14,56 +14,49 @@ public class CroppableImage: Codable {
     public let originalImage: CGImage
     
     private var rawCroppedImage: CGImage
-    private let readWriteQueue = DispatchQueue(label: "com.IntuitiveSoup.StarTych.CroppableImage.concurrentQueue",
-                                               qos: .userInitiated,
-                                               attributes: .concurrent)
+    private let imageCropDispatchGroup = DispatchGroup()
     
     public var croppedFrame: CGRect? {
         didSet {
             // Updating the frame blocks reads to croppedImage
-            readWriteQueue.sync(flags: .barrier) {
-                if self.croppedFrame == oldValue {
-                    return
-                }
+            if self.croppedFrame == oldValue {
+                return
+            }
                 
-                if let newFrame = self.croppedFrame {
-                    // If the new frame is not fully contained within the original image, we will update it
-                    let originalFrame = CGRect(x: 0, y: 0, width: self.originalImage.width, height: self.originalImage.height)
-                    if !originalFrame.contains(newFrame) {
-                        // If the new frame fully contains the original image, we aren't cropping at all
-                        // Otherwise, we want the intersection
-                        var replacementFrame: CGRect? = nil
-                        if !newFrame.contains(originalFrame) {
-                            replacementFrame = newFrame.intersection(originalFrame)
-                        }
-                        
-                        // We can't update croppedFrame in this blocking closure, dispatch back to the main queue
-                        DispatchQueue.global().async {
-                            self.croppedFrame = replacementFrame
-                        }
-                        
-                        // Don't continue to the rawCroppedImage computation because didSet will get called again by changing the frame
-                        return
+            imageCropDispatchGroup.enter()
+            if let newFrame = self.croppedFrame {
+                // If the new frame is not fully contained within the original image, we will update it
+                let originalFrame = CGRect(x: 0, y: 0, width: self.originalImage.width, height: self.originalImage.height)
+                if !originalFrame.contains(newFrame) {
+                    // If the new frame fully contains the original image, we aren't cropping at all
+                    // Otherwise, we want the intersection
+                    var replacementFrame: CGRect? = nil
+                    if !newFrame.contains(originalFrame) {
+                        replacementFrame = newFrame.intersection(originalFrame)
                     }
-                }
-                
-                // Update the rawCroppedImage async, blocking reads
-                readWriteQueue.async(flags: .barrier) {
-                    if let frame = self.croppedFrame {
-                        self.rawCroppedImage = self.originalImage.cropping(to: frame)!
-                    } else {
-                        // TODO: Should this copy or ref the original?
-                        self.rawCroppedImage = self.originalImage
-                    }
+                    
+                    self.croppedFrame = replacementFrame
                 }
             }
+            
+            imageCropDispatchGroup.enter()
+            DispatchQueue.global(qos: .userInitiated).async {
+                if let frame = self.croppedFrame {
+                    self.rawCroppedImage = self.originalImage.cropping(to: frame)!
+                } else {
+                    // TODO: Should this copy or ref the original?
+                    self.rawCroppedImage = self.originalImage
+                }
+                self.imageCropDispatchGroup.leave()
+            }
+            
+            imageCropDispatchGroup.leave()
         }
     }
     
     public var croppedImage: CGImage {
-        return readWriteQueue.sync {
-            return self.rawCroppedImage
-        }
+        imageCropDispatchGroup.wait()
+        return rawCroppedImage
     }
     
     public var width: Int {
