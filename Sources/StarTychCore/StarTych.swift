@@ -18,6 +18,14 @@ public class StarTych: Codable {
     
     var images = [CroppableImage]()
     
+    public var imageCount: Int {
+        return self.images.count
+    }
+    
+    public var hasAnyImage: Bool {
+        return !self.images.isEmpty
+    }
+    
     // NB: Need to invalidate this cache every time we change the images array
     private var averageColorCache: CGColor?
     
@@ -120,14 +128,6 @@ public class StarTych: Codable {
         let swapImage = images[firstIndex]
         images[firstIndex] = images[secondIndex]
         images[secondIndex] = swapImage
-    }
-    
-    public func imageCount() -> Int {
-        return images.count
-    }
-    
-    public func hasAnyImage() -> Bool {
-        return !images.isEmpty
     }
     
     public func makeImage(in frame: CGSize? = nil) -> CGImage? {

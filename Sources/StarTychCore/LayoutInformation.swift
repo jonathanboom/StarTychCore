@@ -22,7 +22,7 @@ struct LayoutInformation {
     let scaledImagesInfo: [ScaledImageInformation]
     
     init?(for starTych: StarTych, in frame: CGSize? = nil) {
-        if !starTych.hasAnyImage() {
+        if !starTych.hasAnyImage {
             return nil
         }
         
