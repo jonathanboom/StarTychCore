@@ -20,31 +20,34 @@ public class CroppableImage: Codable {
     
     public var croppedFrame: CGRect? {
         didSet {
-            // Updating the frame blocks reads to the croppedImage
+            // Updating the frame blocks reads to croppedImage
             readWriteQueue.sync(flags: .barrier) {
                 if self.croppedFrame == oldValue {
                     return
                 }
                 
                 if let newFrame = self.croppedFrame {
-                    let ogWidth = CGFloat(self.originalImage.width)
-                    let ogHeight = CGFloat(self.originalImage.height)
-                    
-                    // Make sure we don't make a frame that's larger than the image's true size
-//                    if newFrame.width > ogWidth || newFrame.height > ogHeight || newFrame.width < 1 || newFrame.height < 1 {
-//
-//                    }
-                    
-                    if newFrame.width > ogWidth && newFrame.height > ogHeight {
-                        self.croppedFrame = nil
-                    } else if newFrame.width > ogWidth {
-                        self.croppedFrame = CGRect(x: 0, y: newFrame.origin.y, width: ogWidth, height: newFrame.height)
-                    } else if newFrame.height > ogHeight {
-                        self.croppedFrame = CGRect(x: newFrame.origin.x, y: 0, width: newFrame.width, height: ogHeight)
+                    // If the new frame is not fully contained within the original image, we will update it
+                    let originalFrame = CGRect(x: 0, y: 0, width: self.originalImage.width, height: self.originalImage.height)
+                    if !originalFrame.contains(newFrame) {
+                        // If the new frame fully contains the original image, we aren't cropping at all
+                        // Otherwise, we want the intersection
+                        var replacementFrame: CGRect? = nil
+                        if !newFrame.contains(originalFrame) {
+                            replacementFrame = newFrame.intersection(originalFrame)
+                        }
+                        
+                        // We can't update croppedFrame in this blocking closure, dispatch back to the main queue
+                        DispatchQueue.global().async {
+                            self.croppedFrame = replacementFrame
+                        }
+                        
+                        // Don't continue to the rawCroppedImage computation because didSet will get called again by changing the frame
+                        return
                     }
                 }
                 
-                // Update the rawCroppedImage async
+                // Update the rawCroppedImage async, blocking reads
                 readWriteQueue.async(flags: .barrier) {
                     if let frame = self.croppedFrame {
                         self.rawCroppedImage = self.originalImage.cropping(to: frame)!
