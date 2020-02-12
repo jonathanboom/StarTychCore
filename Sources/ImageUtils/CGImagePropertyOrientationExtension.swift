@@ -5,7 +5,7 @@
 //  Created by Jonathan Lynch on 2/1/20.
 //
 
-#if !os(macOS)
+#if canImport(UIKit)
 
 import ImageIO
 import UIKit
