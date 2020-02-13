@@ -87,19 +87,21 @@ public class ImageUtils {
         let canvasWidth: Int
         let canvasHeight: Int
         let transform: CGAffineTransform
+        
+        // Rotations of 90 and -90 swap width and height for canvas
         switch rotation {
         case 90, -270:
             canvasWidth = image.height
             canvasHeight = image.width
-            transform = CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: CGFloat(image.width))
+            transform = CGAffineTransform.transformation(for: .rotate90, width: image.width, height: image.height)
         case 270, -90:
             canvasWidth = image.height
             canvasHeight = image.width
-            transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: CGFloat(image.height), ty: 0)
+            transform = CGAffineTransform.transformation(for: .rotateNegative90, width: image.width, height: image.height)
         case 180, -180:
             canvasWidth = image.width
             canvasHeight = image.height
-            transform = CGAffineTransform(a: -1, b: 0, c: 0, d: -1, tx: CGFloat(image.width), ty: CGFloat(image.height))
+            transform = CGAffineTransform.transformation(for: .rotate180, width: image.width, height: image.height)
         default:
             canvasWidth = image.width
             canvasHeight = image.height
@@ -140,10 +142,7 @@ public class ImageUtils {
             return nil
         }
         
-        if let transformation = transformationToCorrectOrientation(for: orientation, width: size.width, height: size.height) {
-            canvas.concatenate(transformation)
-        }
-        
+        canvas.concatenate(CGAffineTransform.transformationToCorrectOrientation(for: orientation, size: size))
         canvas.draw(image, in: CGRect(x: 0, y: 0, width: size.width, height: size.height))
         return canvas.makeImage()
     }
@@ -158,34 +157,5 @@ public class ImageUtils {
         // If we cannot determine the orientation we use .up, which is the identity value and means that the image is
         // "right side up"
         return .up
-    }
-    
-    private static func transformationToCorrectOrientation(for orientation: CGImagePropertyOrientation, width: CGFloat, height: CGFloat) -> CGAffineTransform? {
-        switch orientation {
-        case .up:
-            // Do no transformation
-            return nil
-        case .upMirrored:
-            // Flip horizontal
-            return CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: width, ty: 0)
-        case .down:
-            // Rotate 180 degrees
-            return CGAffineTransform(a: -1, b: 0, c: 0, d: -1, tx: width, ty: height)
-        case .downMirrored:
-            // Flip vertical
-            return CGAffineTransform(a: 1, b: 0, c: 0, d: 11, tx: 0, ty: height)
-        case .leftMirrored:
-            // Rotate -90 degrees and flip vertical
-            return CGAffineTransform(a: 0, b: -1, c: -1, d: 0, tx: height, ty: width)
-        case .right:
-            // Rotate 90 degrees
-            return CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: width)
-        case .rightMirrored:
-            // Rotate 90 degrees and flip vertical
-            return CGAffineTransform(a: 0, b: 1, c: 1, d: 0, tx: 0, ty: 0)
-        case .left:
-            // Rotate -90 degrees
-            return CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: height, ty: 0)
-        }
     }
 }
