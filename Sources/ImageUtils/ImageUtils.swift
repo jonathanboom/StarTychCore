@@ -79,6 +79,41 @@ public class ImageUtils {
         return drawImage(image, size: CGSize(width: width, height: height), orientation: orientation)
     }
     
+    public static func imageWithRotation(_ image: CGImage, rotation: Int) -> CGImage? {
+        if rotation % 360 == 0 {
+            return image
+        }
+        
+        let canvasWidth: Int
+        let canvasHeight: Int
+        let transform: CGAffineTransform
+        switch rotation {
+        case 90, -270:
+            canvasWidth = image.height
+            canvasHeight = image.width
+            transform = CGAffineTransform(a: 0, b: -1, c: 1, d: 0, tx: 0, ty: CGFloat(image.width))
+        case 270, -90:
+            canvasWidth = image.height
+            canvasHeight = image.width
+            transform = CGAffineTransform(a: 0, b: 1, c: -1, d: 0, tx: CGFloat(image.height), ty: 0)
+        case 180, -180:
+            canvasWidth = image.width
+            canvasHeight = image.height
+            transform = CGAffineTransform(a: -1, b: 0, c: 0, d: -1, tx: CGFloat(image.width), ty: CGFloat(image.height))
+        default:
+            canvasWidth = image.width
+            canvasHeight = image.height
+            transform = .identity
+        }
+        
+        let colorSpace = image.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let canvas = CGContext(data: nil, width: canvasWidth, height: canvasHeight, bitsPerComponent: 8, bytesPerRow: 0, space: colorSpace, bitmapInfo: alphaPremultipliedLast.rawValue)
+
+        canvas?.concatenate(transform)
+        canvas?.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return canvas?.makeImage()
+    }
+    
     public static func imageWithCorrectedOrientation(_ image: CGImage, orientation: CGImagePropertyOrientation) -> CGImage? {
         if orientation == .up {
             return image
