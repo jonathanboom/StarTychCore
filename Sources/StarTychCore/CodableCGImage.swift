@@ -26,7 +26,7 @@ struct CodableCGImage: Codable {
             throw EncodingError.invalidValue(image, EncodingError.Context(codingPath: [CodingKeys.imageData], debugDescription: "Could not create CFMutableData while encoding CGImage"))
         }
         
-        guard let imageDestination = CGImageDestinationCreateWithData(imageData, kUTTypeTIFF, 1, nil) else {
+        guard let imageDestination = CGImageDestinationCreateWithData(imageData, kUTTypePNG, 1, nil) else {
             throw EncodingError.invalidValue(image, EncodingError.Context(codingPath: [CodingKeys.imageData], debugDescription: "Could not create CGImageDestination while encoding CGImage"))
         }
         
