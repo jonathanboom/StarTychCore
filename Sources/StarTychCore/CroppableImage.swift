@@ -53,7 +53,10 @@ public class CroppableImage: Codable {
             return rawCroppedFrame
         }
         set {
+            imageCropDispatchGroup.enter()
             setRaw(croppedFrame: newValue)
+            updateCroppedImageAsync()
+            imageCropDispatchGroup.leave()
         }
     }
     
@@ -63,7 +66,10 @@ public class CroppableImage: Codable {
             return rawRotation
         }
         set {
+            imageCropDispatchGroup.enter()
             setRaw(rotation: newValue)
+            updateCroppedImageAsync()
+            imageCropDispatchGroup.leave()
         }
     }
     
