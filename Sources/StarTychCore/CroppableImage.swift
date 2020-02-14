@@ -19,16 +19,56 @@ public class CroppableImage: Codable {
     private let imageCropDispatchGroup = DispatchGroup()
     private let rawValueDispatchGroup = DispatchGroup()
     
-    public var rotation: Int {
-        rawValueDispatchGroup.wait()
-        return rawRotation
+    public init(image: CGImage, orientation: CGImagePropertyOrientation = .up) {
+        originalImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
+        
+        // TODO: Should this copy or ref the original?
+        rawCroppedImage = originalImage
+    }
+    
+    public var croppedImage: CGImage {
+        imageCropDispatchGroup.wait()
+        return rawCroppedImage
+    }
+    
+    public var width: Int {
+        if let frame = self.croppedFrame {
+            return Int(frame.width)
+        } else {
+            return self.originalImage.width
+        }
+    }
+    
+    public var height: Int {
+        if let frame = self.croppedFrame {
+            return Int(frame.height)
+        } else {
+            return self.originalImage.height
+        }
     }
     
     public var croppedFrame: CGRect? {
-        rawValueDispatchGroup.wait()
-        return rawCroppedFrame
+        get {
+            rawValueDispatchGroup.wait()
+            return rawCroppedFrame
+        }
+        set {
+            setRaw(croppedFrame: newValue)
+        }
     }
     
+    public var rotation: Int {
+        get {
+            rawValueDispatchGroup.wait()
+            return rawRotation
+        }
+        set {
+            setRaw(rotation: newValue)
+        }
+    }
+    
+    // If setting both rotation and frame it is preferred to use this method rather than the property setters
+    // This ensures that the croppedImage is only computed once
     public func set(croppedFrame: CGRect?, rotation: Int) {
         if croppedFrame == rawCroppedFrame && rotation == rawRotation {
             return
@@ -115,34 +155,6 @@ public class CroppableImage: Codable {
             // TODO: Should this copy or ref the original?
             return modifiedImage
         }
-    }
-    
-    public var croppedImage: CGImage {
-        imageCropDispatchGroup.wait()
-        return rawCroppedImage
-    }
-    
-    public var width: Int {
-        if let frame = self.croppedFrame {
-            return Int(frame.width)
-        } else {
-            return self.originalImage.width
-        }
-    }
-    
-    public var height: Int {
-        if let frame = self.croppedFrame {
-            return Int(frame.height)
-        } else {
-            return self.originalImage.height
-        }
-    }
-    
-    public init(image: CGImage, orientation: CGImagePropertyOrientation = .up) {
-        originalImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
-        
-        // TODO: Should this copy or ref the original?
-        rawCroppedImage = originalImage
     }
     
     private enum CodingKeys: CodingKey {
