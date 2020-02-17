@@ -14,9 +14,11 @@
     unsigned char *rawData = (unsigned char *)malloc(4);
     
     // Draw the image as a 1x1 pixel into a canvas (in 32-bit, big endian format)
-    CGContextRef canvas = CGBitmapContextCreate(rawData, 1, 1, 8, 4, CGColorSpaceCreateDeviceRGB(), (CGBitmapInfo)(kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big));
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef canvas = CGBitmapContextCreate(rawData, 1, 1, 8, 4, colorSpace, (CGBitmapInfo)(kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big));
     CGContextDrawImage(canvas, CGRectMake(0, 0, 1, 1), image);
     CGContextRelease(canvas);
+    CGColorSpaceRelease(colorSpace);
     
     // Get the color components from the rawData and make an array of float values
     unsigned char redByte = rawData[0];
