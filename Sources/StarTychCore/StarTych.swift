@@ -111,6 +111,10 @@ public class StarTych: Codable {
     }
     
     public func makeImage(in frame: CGSize? = nil) -> CGImage? {
+        return makeImageParallel(in: frame)
+    }
+    
+    public func makeImageSerial(in frame: CGSize? = nil) -> CGImage? {
         if images.isEmpty {
             return nil
         }
@@ -144,6 +148,61 @@ public class StarTych: Codable {
             for scaledImage in layout.scaledImagesInfo.reversed() {
                 canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
                 yOffset += scaledImage.height + layout.innerBorderSize
+            }
+        }
+        
+        return canvas.makeImage()
+    }
+    
+    public func makeImageParallel(in frame: CGSize? = nil) -> CGImage? {
+        if images.isEmpty {
+            return nil
+        }
+        
+        guard let layout = LayoutInformation(for: self, in: frame) else {
+            return nil
+        }
+        
+        guard let canvas = CGContext(data: nil, width: layout.canvasWidth, height: layout.canvasHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
+            print("Something went wrong creating CGContext")
+            return nil
+        }
+        
+        if let scale = layout.canvasScale {
+            if scale < 1.0 {
+                canvas.scaleBy(x: scale, y: scale)
+            }
+        }
+        
+        canvas.setFillColor(borderColor)
+        canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
+        
+        var offsets = [Int]()
+        var xOffset = layout.outerBorderSize
+        var yOffset = layout.outerBorderSize
+        if layout.isHorizontal {
+            for scaledImage in layout.scaledImagesInfo {
+                offsets.append(xOffset)
+                xOffset += scaledImage.width + layout.innerBorderSize
+                
+            }
+        } else {
+            for scaledImage in layout.scaledImagesInfo.reversed() {
+                offsets.append(yOffset)
+                yOffset += scaledImage.height + layout.innerBorderSize
+            }
+        }
+        
+        DispatchQueue.concurrentPerform(iterations: layout.scaledImagesInfo.count) {
+            let scaledImage = layout.scaledImagesInfo[$0]
+            if layout.isHorizontal {
+                let offset = offsets[$0]
+                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: offset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
+                print("drew image \($0) horizontally")
+            } else {
+                let offset = offsets.reversed()[$0]
+                canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: offset, width: scaledImage.width, height: scaledImage.height))
+                print("drew image \($0) vertically")
             }
         }
         
