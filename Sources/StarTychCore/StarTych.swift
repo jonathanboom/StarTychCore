@@ -198,11 +198,11 @@ public class StarTych: Codable {
             if layout.isHorizontal {
                 let offset = offsets[$0]
                 canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: offset, y: yOffset, width: scaledImage.width, height: scaledImage.height))
-                print("drew image \($0) horizontally")
+//                print("drew image \($0) horizontally")
             } else {
                 let offset = offsets.reversed()[$0]
                 canvas.draw(scaledImage.image.croppedImage, in: CGRect(x: xOffset, y: offset, width: scaledImage.width, height: scaledImage.height))
-                print("drew image \($0) vertically")
+//                print("drew image \($0) vertically")
             }
         }
         
