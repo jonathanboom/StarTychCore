@@ -71,33 +71,49 @@ struct LayoutInformation {
         
         var totalWidthSoFar = 2 * outerBorderSize
         var totalHeightSoFar = 2 * outerBorderSize
-        if isHorizontal {
-            totalWidthSoFar += innerBorderSize * (drawableImages - 1)
-            totalHeightSoFar += minDimension
-        }
-        else {
-            totalWidthSoFar += minDimension
-            totalHeightSoFar += innerBorderSize * (drawableImages - 1)
-        }
         
         // Compute the dimensions of the scaled images and the final dimensions in the same pass
         var scaledImages = [ScaledImageInformation]()
-        for image in starTych.images {
-            // Don't compute for un-drawable images
-            if image.width == 0 || image.height == 0 {
-                continue
+        if isHorizontal {
+            totalWidthSoFar += innerBorderSize * (drawableImages - 1)
+            totalHeightSoFar += minHeight
+            var xOffset = outerBorderSize
+            for image in starTych.images {
+                // Don't compute for un-drawable images
+                if image.width == 0 || image.height == 0 {
+                    continue
+                }
+                
+                let scaleFactor = Float(minHeight) / Float(image.height)
+                let scaledSize = ScaledImageInformation.scaledImageSize(image: image, scaleFactor: scaleFactor)
+                let origin = CGPoint(x: xOffset, y: outerBorderSize)
+                let scaledImageInfo = ScaledImageInformation(image: image, size: scaledSize, origin: origin)
+                scaledImages.append(scaledImageInfo)
+
+                totalWidthSoFar += Int(scaledSize.width)
+                xOffset += Int(scaledSize.width) + innerBorderSize
             }
+        } else {
+            totalWidthSoFar += minWidth
+            totalHeightSoFar += innerBorderSize * (drawableImages - 1)
+            var yOffset = outerBorderSize
             
-            let scaleFactor = Float(minDimension) / Float(isHorizontal ? image.height : image.width)
-            let scaledImageInfo = ScaledImageInformation(with: image, scaleFactor: scaleFactor)
-            
-            if isHorizontal {
-                totalWidthSoFar += scaledImageInfo.width
-            } else {
-                totalHeightSoFar += scaledImageInfo.height
+            // Loop in reverse order for vertical drawing due to bottom-left origin
+            for image in starTych.images.reversed() {
+                // Don't compute for un-drawable images
+                if image.width == 0 || image.height == 0 {
+                    continue
+                }
+                
+                let scaleFactor = Float(minWidth) / Float(image.width)
+                let scaledSize = ScaledImageInformation.scaledImageSize(image: image, scaleFactor: scaleFactor)
+                let origin = CGPoint(x: outerBorderSize, y: yOffset)
+                let scaledImageInfo = ScaledImageInformation(image: image, size: scaledSize, origin: origin)
+                scaledImages.append(scaledImageInfo)
+                
+                totalHeightSoFar += Int(scaledSize.height)
+                yOffset += Int(scaledSize.height) + innerBorderSize
             }
-            
-            scaledImages.append(scaledImageInfo)
         }
         
         fullWidth = totalWidthSoFar
