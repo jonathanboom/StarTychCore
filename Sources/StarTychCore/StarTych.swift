@@ -110,7 +110,7 @@ public class StarTych: Codable {
         return images.count - 1
     }
     
-    public func makeImage(in frame: CGSize? = nil) -> CGImage? {
+    public func makeImage(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
         return makeImageParallel(in: frame)
     }
     
@@ -148,7 +148,10 @@ public class StarTych: Codable {
         return canvas.makeImage()
     }
     
-    public func makeImageParallel(in frame: CGSize? = nil) -> CGImage? {
+    private let drawQueue = DispatchQueue(label: "StarTychCore.StarTych.makeImage", qos: .userInitiated, attributes: .concurrent)
+    private let drawGroup = DispatchGroup()
+    
+    public func makeImageParallel(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
         if images.isEmpty {
             return nil
         }
@@ -162,6 +165,7 @@ public class StarTych: Codable {
             return nil
         }
         
+        canvas.interpolationQuality = quality
         if let scale = layout.canvasScale {
             if scale < 1.0 {
                 canvas.scaleBy(x: scale, y: scale)
@@ -171,15 +175,19 @@ public class StarTych: Codable {
         canvas.setFillColor(borderColor)
         canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
         
-        DispatchQueue.concurrentPerform(iterations: layout.scaledImagesInfo.count) {
-            let scaledImage = layout.scaledImagesInfo[$0]
-            canvas.draw(scaledImage.image.croppedImage,
-                        in: CGRect(x: scaledImage.origin.x,
-                                   y: scaledImage.origin.y,
-                                   width: scaledImage.size.width,
-                                   height: scaledImage.size.height))
+        layout.scaledImagesInfo.map { scaledImage in
+            DispatchWorkItem(block: {
+                canvas.draw(scaledImage.image.croppedImage,
+                            in: CGRect(x: scaledImage.origin.x,
+                                       y: scaledImage.origin.y,
+                                       width: scaledImage.size.width,
+                                       height: scaledImage.size.height))
+            })
+        }.forEach {
+            drawQueue.async(group: drawGroup, execute: $0)
         }
         
+        drawGroup.wait()
         return canvas.makeImage()
     }
 }
