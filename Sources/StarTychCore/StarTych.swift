@@ -110,11 +110,19 @@ public class StarTych: Codable {
         return images.count - 1
     }
     
-    public func makeImage(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
-        return makeImageParallel(in: frame)
+    private let makeImageDrawGroup = DispatchGroup()
+    private let makeImageSemaphore = DispatchSemaphore(value: 1)
+    
+    public func makeImage(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
+        return makeImageParallel(in: frame, interpolationQuality: interpolationQuality)
     }
     
-    public func makeImageSerial(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
+    public func makeImageSerial(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
+        makeImageSemaphore.wait()
+        defer {
+            makeImageSemaphore.signal()
+        }
+        
         if images.isEmpty {
             return nil
         }
@@ -128,7 +136,7 @@ public class StarTych: Codable {
             return nil
         }
 
-        canvas.interpolationQuality = quality
+        canvas.interpolationQuality = interpolationQuality
         if let scale = layout.canvasScale {
             if scale < 1.0 {
                 canvas.scaleBy(x: scale, y: scale)
@@ -149,10 +157,12 @@ public class StarTych: Codable {
         return canvas.makeImage()
     }
     
-    private let drawQueue = DispatchQueue(label: "StarTychCore.StarTych.makeImage", qos: .userInitiated, attributes: .concurrent)
-    private let drawGroup = DispatchGroup()
-    
-    public func makeImageParallel(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
+    public func makeImageParallel(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
+        makeImageSemaphore.wait()
+        defer {
+            makeImageSemaphore.signal()
+        }
+        
         if images.isEmpty {
             return nil
         }
@@ -166,7 +176,7 @@ public class StarTych: Codable {
             return nil
         }
         
-        canvas.interpolationQuality = quality
+        canvas.interpolationQuality = interpolationQuality
         if let scale = layout.canvasScale {
             if scale < 1.0 {
                 canvas.scaleBy(x: scale, y: scale)
@@ -185,10 +195,10 @@ public class StarTych: Codable {
                                        height: scaledImage.size.height))
             })
         }.forEach {
-            drawQueue.async(group: drawGroup, execute: $0)
+            DispatchQueue.global(qos: .userInteractive).async(group: makeImageDrawGroup, execute: $0)
         }
         
-        drawGroup.wait()
+        makeImageDrawGroup.wait()
         return canvas.makeImage()
     }
 }
