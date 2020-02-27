@@ -23,7 +23,7 @@ public class CroppableImage: Codable {
         originalImage = ImageUtils.imageWithCorrectedOrientation(image, orientation: orientation)!
         
         // TODO: Should this copy or ref the original?
-        rawCroppedImage = originalImage
+        rawCroppedImage = originalImage.copy()!
     }
     
     public var croppedImage: CGImage {
@@ -159,7 +159,7 @@ public class CroppableImage: Codable {
             return modifiedImage?.cropping(to: frame)
         } else {
             // TODO: Should this copy or ref the original?
-            return modifiedImage
+            return modifiedImage?.copy()
         }
     }
     
