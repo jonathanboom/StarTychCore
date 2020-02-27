@@ -114,7 +114,7 @@ public class StarTych: Codable {
         return makeImageParallel(in: frame)
     }
     
-    public func makeImageSerial(in frame: CGSize? = nil) -> CGImage? {
+    public func makeImageSerial(in frame: CGSize? = nil, quality: CGInterpolationQuality = .default) -> CGImage? {
         if images.isEmpty {
             return nil
         }
@@ -128,6 +128,7 @@ public class StarTych: Codable {
             return nil
         }
 
+        canvas.interpolationQuality = quality
         if let scale = layout.canvasScale {
             if scale < 1.0 {
                 canvas.scaleBy(x: scale, y: scale)
