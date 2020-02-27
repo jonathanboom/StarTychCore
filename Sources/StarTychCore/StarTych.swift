@@ -177,18 +177,11 @@ public class StarTych: Codable {
         
         layout.scaledImagesInfo.map { scaledImage in
             DispatchWorkItem(block: {
-                guard let layer = CGLayer(canvas, size: scaledImage.size, auxiliaryInfo: nil) else {
-                    print("Something went wrong creating CGLayer")
-                    return
-                }
-                
-                layer.context?.draw(scaledImage.image.croppedImage,
-                                   in: CGRect(x: 0, y: 0, width: scaledImage.size.width, height: scaledImage.size.height))
-                let finalize = DispatchWorkItem(block: {
-                    canvas.draw(layer, at: scaledImage.origin)
-                })
-                
-                DispatchQueue.global(qos: .userInitiated).async(group: self.drawGroup, execute: finalize)
+                canvas.draw(scaledImage.image.croppedImage,
+                            in: CGRect(x: scaledImage.origin.x,
+                                       y: scaledImage.origin.y,
+                                       width: scaledImage.size.width,
+                                       height: scaledImage.size.height))
             })
         }.forEach {
             drawQueue.async(group: drawGroup, execute: $0)
