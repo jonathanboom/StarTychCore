@@ -113,10 +113,6 @@ public class StarTych: Codable {
     private let makeImageDrawGroup = DispatchGroup()
     
     public func makeImage(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
-        return makeImageParallel(in: frame, interpolationQuality: interpolationQuality)
-    }
-    
-    public func makeImageSerial(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
         if images.isEmpty {
             return nil
         }
@@ -130,7 +126,6 @@ public class StarTych: Codable {
             return nil
         }
 
-        canvas.interpolationQuality = interpolationQuality
         if let scale = layout.canvasScale {
             if scale < 1.0 {
                 canvas.scaleBy(x: scale, y: scale)
@@ -139,7 +134,7 @@ public class StarTych: Codable {
 
         canvas.setFillColor(borderColor)
         canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
-
+        canvas.interpolationQuality = interpolationQuality
         for scaledImage in layout.scaledImagesInfo {
             canvas.draw(scaledImage.image.croppedImage,
                         in: CGRect(x: scaledImage.origin.x,
@@ -148,46 +143,6 @@ public class StarTych: Codable {
                                    height: scaledImage.size.height))
         }
 
-        return canvas.makeImage()
-    }
-    
-    public func makeImageParallel(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
-        if images.isEmpty {
-            return nil
-        }
-        
-        guard let layout = LayoutInformation(for: self, in: frame) else {
-            return nil
-        }
-        
-        guard let canvas = CGContext(data: nil, width: layout.canvasWidth, height: layout.canvasHeight, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: ImageUtils.alphaPremultipliedLast.rawValue) else {
-            print("Something went wrong creating CGContext")
-            return nil
-        }
-        
-        canvas.interpolationQuality = interpolationQuality
-        if let scale = layout.canvasScale {
-            if scale < 1.0 {
-                canvas.scaleBy(x: scale, y: scale)
-            }
-        }
-        
-        canvas.setFillColor(borderColor)
-        canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
-        
-        layout.scaledImagesInfo.map { scaledImage in
-            DispatchWorkItem(block: {
-                canvas.draw(scaledImage.image.croppedImage,
-                            in: CGRect(x: scaledImage.origin.x,
-                                       y: scaledImage.origin.y,
-                                       width: scaledImage.size.width,
-                                       height: scaledImage.size.height))
-            })
-        }.forEach {
-            DispatchQueue.global(qos: .userInteractive).async(group: makeImageDrawGroup, execute: $0)
-        }
-        
-        makeImageDrawGroup.wait()
         return canvas.makeImage()
     }
 }
