@@ -111,18 +111,12 @@ public class StarTych: Codable {
     }
     
     private let makeImageDrawGroup = DispatchGroup()
-    private let makeImageSemaphore = DispatchSemaphore(value: 1)
     
     public func makeImage(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
         return makeImageParallel(in: frame, interpolationQuality: interpolationQuality)
     }
     
     public func makeImageSerial(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
-        makeImageSemaphore.wait()
-        defer {
-            makeImageSemaphore.signal()
-        }
-        
         if images.isEmpty {
             return nil
         }
@@ -158,11 +152,6 @@ public class StarTych: Codable {
     }
     
     public func makeImageParallel(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
-        makeImageSemaphore.wait()
-        defer {
-            makeImageSemaphore.signal()
-        }
-        
         if images.isEmpty {
             return nil
         }
