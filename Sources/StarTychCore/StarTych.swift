@@ -110,8 +110,6 @@ public class StarTych: Codable {
         return images.count - 1
     }
     
-    private let makeImageDrawGroup = DispatchGroup()
-    
     public func makeImage(in frame: CGSize? = nil, interpolationQuality: CGInterpolationQuality = .default) -> CGImage? {
         if images.isEmpty {
             return nil
