@@ -1,4 +1,10 @@
 // swift-tools-version:5.1
+//
+// Copyright (c) 2020, Jonathan Lynch
+//
+// This source code is licensed under the BSD 3-Clause License license found in the
+// LICENSE file in the root directory of this source tree.
+//
 
 import PackageDescription
 
@@ -26,8 +32,5 @@ let package = Package(
         .target(
             name: "StarTychCore",
             dependencies: ["ImageUtils"]),
-        .testTarget(
-            name: "StarTychCoreTests",
-            dependencies: ["StarTychCore"]),
     ]
 )

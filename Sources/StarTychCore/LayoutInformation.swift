@@ -1,8 +1,8 @@
 //
-//  LayoutInformation.swift
-//  
+// Copyright (c) 2020, Jonathan Lynch
 //
-//  Created by Jonathan Lynch on 1/25/20.
+// This source code is licensed under the BSD 3-Clause License license found in the
+// LICENSE file in the root directory of this source tree.
 //
 
 import CoreGraphics
