@@ -133,6 +133,9 @@ public class StarTych: Codable {
         canvas.setFillColor(borderColor)
         canvas.fill(CGRect(x: 0, y: 0, width: layout.fullWidth, height: layout.fullHeight))
         canvas.interpolationQuality = interpolationQuality
+        
+        // This was designed to use DispatchQueue.concurrentPerform, but CGContext isn't thread-safe so the program
+        // crashes or corrupts images non-deterministically
         for scaledImage in layout.scaledImagesInfo {
             canvas.draw(scaledImage.image.croppedImage,
                         in: CGRect(x: scaledImage.origin.x,
